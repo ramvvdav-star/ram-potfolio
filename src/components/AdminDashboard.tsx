@@ -402,7 +402,7 @@ export const AdminDashboard: React.FC = () => {
               className="w-full py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_12px_rgba(16,185,129,0.3)]"
             >
               <Shield className="w-3.5 h-3.5" />
-              <span>Authenticate as Administrator (admin / ramsec2026)</span>
+              <span>Authenticate as Administrator</span>
             </button>
 
             <button

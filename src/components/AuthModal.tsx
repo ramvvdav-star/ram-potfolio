@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Shield,
   Lock,
@@ -38,9 +38,9 @@ export const AuthModal: React.FC = () => {
   } = useApp();
 
   const [mode, setMode] = useState<AuthViewMode>('login');
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('ramsec2026');
-  const [email, setEmail] = useState('admin@sec.local');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('researcher');
 
   // Supabase Custom Config state
@@ -52,6 +52,17 @@ export const AuthModal: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Clear credentials when modal opens or closes to prevent autofilling or leaking
+  useEffect(() => {
+    if (isAuthModalOpen) {
+      setUsername('');
+      setPassword('');
+      setEmail('');
+      setError(null);
+      setSuccess(null);
+    }
+  }, [isAuthModalOpen]);
 
   if (!isAuthModalOpen) return null;
 
@@ -133,25 +144,6 @@ export const AuthModal: React.FC = () => {
     navigator.clipboard.writeText(SUPABASE_SQL_SCHEMA);
     setCopiedSql(true);
     setTimeout(() => setCopiedSql(false), 2000);
-  };
-
-  const handleQuickLogin = async (usr: string, pass: string, isAdminTarget: boolean = false) => {
-    soundFx.playKeyClick();
-    setError(null);
-    setLoading(true);
-    const res = await login(usr, pass);
-    setLoading(false);
-    if (res.success) {
-      setSuccess(`Authenticated as ${usr}`);
-      setTimeout(() => {
-        setIsAuthModalOpen(false);
-        if (isAdminTarget) {
-          setIsAdminOpen(true);
-        }
-      }, 400);
-    } else {
-      setError(res.error || 'Quick authentication failed.');
-    }
   };
 
   return (
@@ -371,8 +363,9 @@ export const AuthModal: React.FC = () => {
                       required
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
+                      autoComplete="username"
                       className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-3 text-zinc-200 outline-none focus:border-emerald-500/50"
-                      placeholder="e.g. admin or analyst@sec.local"
+                      placeholder="Enter username or operator email"
                     />
                   </div>
                 )}
@@ -388,6 +381,7 @@ export const AuthModal: React.FC = () => {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="email"
                       className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-3 text-zinc-200 outline-none focus:border-emerald-500/50"
                       placeholder="operator@sec.local"
                     />
@@ -465,6 +459,7 @@ export const AuthModal: React.FC = () => {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="current-password"
                       className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-3 text-zinc-200 outline-none focus:border-emerald-500/50 font-sans"
                       placeholder="••••••••"
                     />
@@ -489,74 +484,6 @@ export const AuthModal: React.FC = () => {
                 </button>
               </form>
 
-              {/* Quick Fill Testing Credentials buttons for evaluation */}
-              {mode === 'login' && (
-                <div className="pt-3 border-t border-zinc-800/80 space-y-2">
-                  <div className="text-[10px] text-zinc-500 uppercase tracking-wider flex items-center justify-between">
-                    <span>EVALUATION OPERATOR ACCOUNTS:</span>
-                    <span className="text-[9px] text-zinc-600">Click to fill</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUsername('admin');
-                        setPassword('ramsec2026');
-                        soundFx.playKeyClick();
-                      }}
-                      className="py-1.5 px-2 rounded border border-amber-500/30 bg-amber-950/20 text-amber-300 text-[10px] hover:bg-amber-950/40 text-center"
-                    >
-                      Admin
-                      <div className="text-[8px] text-amber-500/70">ramsec2026</div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUsername('researcher');
-                        setPassword('researcher123');
-                        soundFx.playKeyClick();
-                      }}
-                      className="py-1.5 px-2 rounded border border-emerald-500/30 bg-emerald-950/20 text-emerald-300 text-[10px] hover:bg-emerald-950/40 text-center"
-                    >
-                      Researcher
-                      <div className="text-[8px] text-emerald-500/70">researcher123</div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUsername('analyst');
-                        setPassword('analyst123');
-                        soundFx.playKeyClick();
-                      }}
-                      className="py-1.5 px-2 rounded border border-cyan-500/30 bg-cyan-950/20 text-cyan-300 text-[10px] hover:bg-cyan-950/40 text-center"
-                    >
-                      SOC Analyst
-                      <div className="text-[8px] text-cyan-500/70">analyst123</div>
-                    </button>
-                  </div>
-
-                  {/* Direct One-click launch shortcuts */}
-                  <div className="flex gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => handleQuickLogin('admin', 'ramsec2026', true)}
-                      className="flex-1 py-2 px-2.5 rounded-lg border border-amber-500/50 bg-amber-950/40 text-amber-300 text-xs font-bold hover:bg-amber-950/70 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_10px_rgba(245,158,11,0.2)]"
-                    >
-                      <Shield className="w-3.5 h-3.5 text-amber-400" />
-                      <span>One-Click Login as Admin</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleQuickLogin('researcher', 'researcher123', false)}
-                      className="flex-1 py-2 px-2.5 rounded-lg border border-emerald-500/40 bg-emerald-950/30 text-emerald-300 text-xs font-bold hover:bg-emerald-950/60 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <UserIcon className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Login as Researcher</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* Mode Toggle Footer */}
               <div className="text-center pt-2 space-y-1">
                 {mode === 'login' ? (
@@ -565,6 +492,9 @@ export const AuthModal: React.FC = () => {
                     onClick={() => {
                       soundFx.playKeyClick();
                       setMode('signup');
+                      setUsername('');
+                      setPassword('');
+                      setEmail('');
                       setError(null);
                       setSuccess(null);
                     }}
@@ -578,6 +508,9 @@ export const AuthModal: React.FC = () => {
                     onClick={() => {
                       soundFx.playKeyClick();
                       setMode('login');
+                      setUsername('');
+                      setPassword('');
+                      setEmail('');
                       setError(null);
                       setSuccess(null);
                     }}
